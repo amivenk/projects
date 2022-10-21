@@ -1,0 +1,112 @@
+package warehouse;
+
+/*
+ *
+ * This class implements a warehouse on a Hash Table like structure, 
+ * where each entry of the table stores a priority queue. 
+ * @author Ishaan Ivaturi
+ */ 
+public class Warehouse {
+    private Sector[] sectors;
+    
+    // Initializes every sector to an empty sector
+    public Warehouse() {
+        sectors = new Sector[10];
+
+        for (int i = 0; i < 10; i++) {
+            sectors[i] = new Sector();
+        }
+    }
+    
+    public void addProduct(int id, String name, int stock, int day, int demand) {
+        evictIfNeeded(id);
+        addToEnd(id, name, stock, day, demand);
+        fixHeap(id);
+    }
+
+    /**
+     * Add a new product to the end of the correct sector
+     */
+    private void addToEnd(int id, String name, int stock, int day, int demand) {
+        Product product = new Product(id, name, stock, day, demand);
+        int x = id % 10;
+        sectors[x].add(product);
+    }
+
+
+    private void fixHeap(int id) {
+        int x = id % 10;
+        sectors[x].swim(sectors[x].getSize());
+    }
+
+    /**
+     * Delete the least popular item in the correct sector, only if its size is 5 while maintaining heap
+     */
+    private void evictIfNeeded(int id) {
+        int x = id % 10; 
+
+        if (sectors[x].getSize() == 5){
+            sectors[x].swap(1, sectors[x].getSize());
+            sectors[x].deleteLast();
+            sectors[x].sink(1);
+        }
+    }
+
+    /**
+     * Update the stock of some item by some amount
+     */
+    public void restockProduct(int id, int amount) {
+        int x = id % 10;
+        for (int y = 1; y <= sectors[x].getSize(); y++){
+            if (sectors[x].get(y).getId() == id){
+                sectors[x].get(y).updateStock(amount);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Delete some arbitrary product while maintaining the heap structure in O(logn)
+     */
+    public void deleteProduct(int id) {
+        int x = id % 10;
+        for (int y = 1; y <= sectors[x].getSize(); y++){
+            if (sectors[x].get(y).getId() == id){
+                sectors[x].swap(y, sectors[x].getSize());
+                sectors[x].deleteLast();
+                sectors[x].sink(y);
+            }
+        }
+    }
+    
+    /**
+     * Simulate a purchase order for some product
+     */
+    public void purchaseProduct(int id, int day, int amount) {
+        int x = id % 10;
+        int z = amount * -1;
+        for(int y = 1; y <= sectors[x].getSize(); y++){
+            if (sectors[x].get(y).getId() == id && sectors[x].get(y).getStock() >= amount){
+                sectors[x].get(y).updateStock(z);
+                sectors[x].get(y).updateDemand(amount);
+                sectors[x].get(y).setLastPurchaseDay(day);
+                sectors[x].sink(y);
+                break;
+            }
+        }
+    }
+   
+    public String toString() {
+        String warehouseString = "[\n";
+
+        for (int i = 0; i < 10; i++) {
+            warehouseString += "\t" + sectors[i].toString() + "\n";
+        }
+        
+        return warehouseString + "]";
+    }
+
+    public Sector[] getSectors () {
+        return sectors;
+    }
+}
