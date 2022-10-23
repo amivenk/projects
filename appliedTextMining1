@@ -1,0 +1,56 @@
+import pandas as pd
+
+doc = []
+with open('dates.txt') as file:
+    for line in file:
+        doc.append(line)
+
+df = pd.Series(doc)
+df.head(10)
+
+def date_sorter():
+    import re
+    from calendar import month_name
+    import dateutil.parser
+    from datetime import datetime
+    
+    df = pd.DataFrame(doc, columns=['text'])
+    pattern = "[,.]? \d{4}|".join(month_name[1:]) + "[,.]? \d{4}";
+
+    df['text'] = df['text'].apply(lambda x: x.strip('\n'))
+
+    df['date'] = df['text'].apply(lambda x:re.findall(r'\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\-\d{1,2}\-\d{2,4}|[A-Z][a-z]+\-\d{1,2}\-\d{4}|[A-Z][a-z]+[,.]? \d{2}[a-z]*,? \d{4}|\d{1,2} [A-Z][a-z,.]+ \d{4}|[A-Z][a-z]{2}[,.]? \d{4}|'+pattern+r'|\d{1,2}\/\d{4}|\d{4}',x))
+    df['date'][271] = [df['date'][271][1]]
+    df['date'] = df['date'].apply(lambda x: x[0])
+    df['date'][461] = re.findall(r'\d{4}',df['date'][461])[0]
+    df['date'][465] = re.findall(r'\d{4}',df['date'][465])[0]
+    
+    date_list = list(df['date'])
+
+    i=0
+    for year in date_list:
+        if(re.match(r'\d{4}',year)) :
+            #print(year)
+            date_list[i] = 'January 1, '+date_list[i]
+            year = date_list[i]
+        elif (re.match(r'\d{1,2}\/\d{4}',year)) :
+            date_split = year.split('/')
+            date_list[i] = date_split[0] + '/1/'+date_split[1]
+            year = date_list[i]
+        elif(re.match(r'[A-Z][a-z]+[,.]? \d{4}',year)) :
+            date_split = year.split(' ')
+            date_list[i] = date_split[0] + ' 1 '+date_split[1]
+            year = date_list[i]
+        date_list[i] = dateutil.parser.parse(date_list[i]).strftime("%m/%d/%Y")
+        i = i+1
+        
+    df['date'] = date_list
+    fun = lambda date: datetime.strptime(date, "%m/%d/%Y")
+    df['index'] = sorted(range(len(date_list)), key=lambda x : fun(date_list[x]))
+    sdf = df
+    sdf.drop('text', axis=1,inplace=True)
+    #result = sdf.sort_values(by='date',axis=0, ascending=False, kind='mergesort')
+    final = list(sdf['index'])
+    final_series = pd.Series(final)
+    
+    return final_series
