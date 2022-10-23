@@ -1,0 +1,84 @@
+Explore measures of centrality on two networks, a friendship network, and a blog network.
+
+import networkx as nx
+
+G1 = nx.read_gml('friendships.gml')
+
+Find the degree centrality, closeness centrality, and normalized betweeness centrality (excluding endpoints) of node 100.
+
+def answer_one():
+    degree_centrality = nx.degree_centrality(G1)[100]
+    closeness_centrality = nx.closeness_centrality(G1)[100]
+    between_centrality = nx.betweenness_centrality(G1, endpoints=False, normalized=True)[100]
+    return degree_centrality, closeness_centrality, between_centrality
+answer_one()
+
+Suppose you are employed by an online shopping website and are tasked with selecting one user in network G1 to send an online shopping voucher to. We
+expect that the user who receives the voucher will send it to their friends in the network. You want the voucher to reach as many nodes as possible. The
+voucher can be forwarded to multiple users at the same time, but the travel distance of the voucher is limited to one step, which means if the voucher travels
+more than one step in this network, it is no longer valid. Apply your knowledge in network centrality to select the best candidate for the voucher.
+
+def answer_two():
+    degree = nx.degree_centrality(G1)
+    return max(degree.keys(), key=lambda x:degree[x])
+answer_two()
+
+Now the limit of the voucher’s travel distance has been removed. Because the network is connected, regardless of who you pick, every node in the network will
+eventually receive the voucher. However, we now want to ensure that the voucher reaches the nodes in the lowest average number of hops.
+How would you change your selection strategy? Write a function to tell us who is the best candidate in the network under this condition.
+
+def answer_three():
+    closeness = nx.closeness_centrality(G1)
+    return max(closeness.keys(), key=lambda x:closeness[x])
+answer_three()
+
+Assume the restriction on the voucher’s travel distance is still removed, but now a competitor has developed a strategy to remove a person from the network in
+order to disrupt the distribution of your company’s voucher. Your competitor is specifically targeting people who are often bridges of information flow between
+other pairs of people. Identify the single riskiest person to be removed under your competitor’s strategy?
+
+def answer_four():
+    betweeness = nx.betweenness_centrality(G1)
+    return max(betweeness.keys(), key=lambda x:betweeness[x])
+answer_four()
+
+G2 is a directed network of political blogs, where nodes correspond to a blog and edges correspond to links between blogs.
+
+G2 = nx.read_gml('blogs.gml')
+
+Apply the Scaled Page Rank Algorithm to this network. Find the Page Rank of node 'realclearpolitics.com' with damping value 0.85.
+
+def answer_five():
+    pr = nx.pagerank(G2, alpha=0.85)
+    return pr['realclearpolitics.com']
+answer_five()
+
+Apply the Scaled Page Rank Algorithm to this network with damping value 0.85. Find the 5 nodes with highest Page Rank.
+
+def answer_six():
+    pr = nx.pagerank(G2, alpha=0.85)
+    return sorted(pr.keys(), key=lambda key:pr[key], reverse=True)[:5]
+answer_six()
+
+Apply the HITS Algorithm to the network to find the hub and authority scores of node 'realclearpolitics.com'.
+
+def answer_seven():
+    hits = nx.hits(G2)
+    node = 'realclearpolitics.com'
+    return hits[0][node], hits[1][node]
+answer_seven()
+
+Apply the HITS Algorithm to this network to find the 5 nodes with highest hub scores.
+
+def answer_eight():
+    hits = nx.hits(G2)
+    hubs = hits[0]
+    return sorted(hubs.keys(), key=lambda key:hubs[key], reverse=True)[:5]
+answer_eight()
+
+Apply the HITS Algorithm to this network to find the 5 nodes with highest authority scores.
+
+def answer_nine():
+    hits = nx.hits(G2)
+    authorities = hits[1]
+    return sorted(authorities.keys(), key=lambda key:authorities[key], reverse=True)[:5]
+answer_nine()
