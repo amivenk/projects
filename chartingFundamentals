@@ -1,0 +1,77 @@
+Easiest option: Implement the bar coloring as described above - a color scale with only three colors, (e.g. blue, white, and red). Assume the user provides the y axis 
+value of interest as a parameter or variable.
+
+Harder option: Implement the bar coloring as described in the paper, where the color of the bar is actually based on the amount of data covered (e.g. a gradient ranging
+from dark blue for the distribution being certainly below this y-axis, to white if the value is certainly contained, to dark red if the value is certainly not contained as the distribution is above the axis).
+
+Even Harder option: Add interactivity to the above, which allows the user to click on the y axis to set the value of interest. The bar colors should change with respect
+to what value the user has selected.
+
+Hardest option: Allow the user to interactively set a range of y values they are interested in, and recolor based on this (e.g. a y-axis band, see the paper for more 
+details).
+
+# Use the following data for this assignment:
+
+import pandas as pd
+import numpy as np
+
+np.random.seed(12345)
+
+df = pd.DataFrame([np.random.normal(32000,200000,3650), 
+                   np.random.normal(43000,100000,3650), 
+                   np.random.normal(43500,140000,3650), 
+                   np.random.normal(48000,70000,3650)], 
+                  index=[1992,1993,1994,1995])
+df
+
+import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+
+mean = df.mean(axis=1)
+std = df.std(axis=1)
+mean.values
+
+std.values
+
+import math
+confidence = 1.96 * (std.values / math.sqrt(len(df.columns)))
+confidence
+
+%matplotlib notebook
+
+threshold = 42500
+
+def colorForBar(mean, threshold, confidence):
+    if (mean - confidence) <= threshold and (mean + confidence) >= threshold:
+        return "white"
+    
+    if mean < threshold:
+        return "blue"
+    
+    if mean > threshold:
+        return "red"
+
+fig, ax = plt.subplots()
+
+colors=[colorForBar(mean.iloc[0], threshold, confidence[0]),
+        colorForBar(mean.iloc[1], threshold, confidence[1]), 
+        colorForBar(mean.iloc[2], threshold, confidence[2]), 
+        colorForBar(mean.iloc[3], threshold, confidence[3])]
+
+ax.axhline(y=threshold, zorder=10, linestyle="--", color="orange")
+trans = transforms.blended_transform_factory(ax.get_yticklabels()[0].get_transform(), ax.transData)
+ax.text(0,threshold, "{:.0f}".format(threshold), color="orange", transform=trans, 
+        ha="right", va="center")
+
+ax.bar(range(df.shape[0]), mean, yerr=confidence,
+        align='center', color=colors)
+
+ax.set_facecolor("lightgray")
+
+plt.xticks(np.arange(len(df.index)), df.index)
+
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+plt.show()
+       
