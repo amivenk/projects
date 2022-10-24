@@ -1,0 +1,100 @@
+State the region and the domain category that the data sets are about (e.g., Ann Arbor, Michigan, United States and religious events or traditions).
+State a question about the domain category and region that you identified as being interesting.
+Provide at least two links to available datasets.
+Upload an image which addresses the research question you stated. In addition to addressing the question, this visual should follow Cairo's principles of truthfulness,
+functionality, beauty, and insightfulness.
+
+import pandas as pd
+import numpy as np
+
+data_url = "https://fred.stlouisfed.org/graph/fredgraph.csv?chart_type=line&recession_bars=on&log_scales=&bgcolor=%23e1e9f0&graph_bgcolor=%23ffffff&fo=Open+Sans&ts=12&tts=12&txtcolor=%23444444&show_legend=yes&show_axis_titles=yes&drp=0&cosd=2015-12-26&coed=2017-01-30&height=450&stacking=&range=Custom&mode=fred&id=DFXARC1M027SBEA&transformation=lin&nd=1959-01-01&ost=-99999&oet=99999&lsv=&lev=&mma=0&fml=a&fgst=lin&fgsnd=2009-06-01&fq=Monthly&fam=avg&vintage_date=&revision_date=&line_color=%234572a7&line_style=solid&lw=2&scale=left&mark_type=none&mw=2&width=1168"
+df_expenditure = pd.read_csv(data_url)
+df_expenditure.head()
+
+def find_between( s, first, last ):
+    try:
+        start = s.index( first ) + len( first )
+        end = s.index( last, start )
+        return s[start:end]
+    except ValueError:
+        return ""
+
+from urllib.request import urlopen
+
+link = "http://www.calendar-12.com/catholic_holidays/2016"
+response = urlopen(link)
+content = response.read().decode("utf-8")
+
+table = find_between(content, "<tbody>","</tbody>");
+rows = table.split("/tr")
+
+csv = "Day\n"
+for row in rows:
+    day = find_between(row, '">', "</t")
+    day = find_between(day, "> ", "</")
+    csv = csv + day + "\n"
+
+print(csv)
+
+import sys
+if sys.version_info[0] < 3: 
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
+    
+df_catholic = pd.read_csv(StringIO(csv), sep=";")
+df_catholic.head()
+
+from datetime import datetime
+
+# Strip out weekday name
+df_catholic["Date"] =  df_catholic.apply(lambda row:row["Day"][row["Day"].find(",")+1:], axis=1)
+# Convert to date
+df_catholic["Date"] =  df_catholic.apply(lambda row: datetime.strptime(row["Date"], " %B %d, %Y"), axis=1)
+df_catholic["Holiday"] = 1
+df_catholic.head()
+
+df_expenditure["Date"] = df_expenditure.apply(lambda row: datetime.strptime(row["DATE"], "%Y-%m-%d"), axis=1)
+df_expenditure.head()
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+%matplotlib notebook
+
+fig, ax = plt.subplots()
+a = ax.plot(list(df_expenditure["Date"]), df_expenditure["DFXARC1M027SBEA"], label="Expentiture", zorder=10)
+
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+plt.xlabel("Date")
+plt.ylabel("Billions of Dollars")
+plt.title("Catholic holiday effect on US food expenditure, 2016")
+
+ax2 = ax.twinx()
+#b = ax2.scatter(list(df_catholic["Date"]),df_catholic["Holiday"], s=60, c="red", alpha=0.7, label="Holiday")
+
+b = ax2.bar(list(df_catholic["Date"]),df_catholic["Holiday"], alpha=0.2, label="Holiday", color="Red")
+
+ax2 = plt.gca()
+ax2.spines['top'].set_visible(False)
+ax2.spines['right'].set_visible(False)
+
+#my_xticks = ['','','Holiday','', '']
+#plt.yticks(list(df_catholic["Holiday"]), my_xticks)
+
+ax2 = plt.gca()
+ax2.yaxis.set_visible(False)
+
+# Combine legend
+h1, l1 = ax.get_legend_handles_labels()
+h2, l2 = ax2.get_legend_handles_labels()
+ax.legend(h1+h2, l1+l2, loc=4, frameon = False)
+
+months = ['Jan','Feb','Mar','Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct' ,'Nov', 'Dec', 'Jan']
+plt.xticks(list(df_expenditure["Date"]), months, rotation='vertical')
+fig.autofmt_xdate()
+
+plt.show()
