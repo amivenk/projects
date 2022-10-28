@@ -1,0 +1,56 @@
+Write a program that will read an array from a file and print if the numbers in the file are right truncatable primes. A right truncatable prime is a prime number, 
+where if you truncate any numbers from the right, theresulting number is still prime. For example, 3797 is a truncatable prime number number because 3797, 379, 37, 
+and 3 are all primes.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char * argv[argc+1])
+{ 
+
+    FILE *fp;
+    fp = fopen(argv[1],"r");            //read file 
+    
+    if (fp == NULL){                    //print if you cannot open file 
+        printf("error");
+        return 1; 
+    } 
+
+    int numOfLines;                     //read first line of file 
+    fscanf(fp, "%d", &numOfLines);
+    int arr[numOfLines];
+
+
+    int i;                              //store numbers from file into array 
+    int value; 
+    for (i = 0; i < numOfLines; i++)
+    {
+        arr[i]=0;
+        fscanf(fp, "%d", &value);
+        for(int k = value; k >= 9; k = k/10)
+        {
+            for(int j = 2; j < k; j++)
+            {
+                if(k%j == 0)
+                {
+                    arr[i] = 1; 
+                }
+                if(k == 0 || k == 1){
+                    arr[i] = 1;
+                }
+            }
+        }
+    }
+    for (i = 0; i < numOfLines; i++)
+    {
+        if(arr[i] == 0){
+            printf("yes\n");
+        }
+        else{
+            printf("no\n");
+        }
+    }
+
+    fclose(fp);                         //close file 
+}
