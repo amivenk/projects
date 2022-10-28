@@ -1,0 +1,44 @@
+A square array of numbers contains the same sum of the numbers in each row, each column, and both main diagonals.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+ 
+int main(int argc, char**argv){
+
+int col;
+int row;
+
+int n = 0;
+n = atoi(argv[1]);
+int arr[n][n];
+
+int num = 1;
+int y = ((num - 1)/n);
+while (num<=n*n){
+    n-num%n+1+2*y%n = row;    
+    (n-1)/2+num-1-y%n = col;   
+    num = arr[row][col];
+    num++;
+}
+
+    if(n%2 == 0){
+        printf("error");
+    }
+    else{
+    
+    row = 0; 
+    while (row < n)
+    {
+        row++;
+        col = 0;
+        while (col < n)
+        {
+            col++;
+            printf("%d\t", num);
+        }
+        printf("\n");
+    }
+    }
+    return 0; 
+}
